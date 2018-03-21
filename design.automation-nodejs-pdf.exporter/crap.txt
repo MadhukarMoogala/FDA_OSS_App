@@ -1,0 +1,31 @@
+                               /* pollWorkItem(workItemId, oauthClient, credentials).then(function (pollWorkItemResp){
+
+
+                                    if (pollWorkItemResp.body.Status === "Succeeded")
+                                    {
+                                        var resource = pollWorkItemResp.body.Arguments.OutputArguments[0].Resource;
+                                        downloadPdfToDisk(resource, fileName);
+                                        return true;
+                                    }
+                                    else
+                                    {
+                                        var p = function () {
+                                            pollWorkItem(workItemId, oauthClient, credentials);
+                                            return false;
+                                        };
+                                        poll(p, function (err) {
+                                            if (err) {
+
+                                           console.log("*** polling******");
+                                            }
+                                            else {
+                                                // Done, success callback
+                                                console.log("*** polling Done....******");
+                                            }
+                                        }, 2000, 150);
+                                       
+                                    }
+
+                                }).catch(function (err) {
+                                    console.error(err);
+                                });*/
