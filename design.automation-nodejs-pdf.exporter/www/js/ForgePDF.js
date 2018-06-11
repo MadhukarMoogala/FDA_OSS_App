@@ -28,7 +28,7 @@ var ForgePDF = {
 
   },
 
-  exportPDF: function (urn, projectid, itemId, fileName, token, status, fileType) { 
+  exportPDF: function (href, urn, projectid, itemId, fileName, token, status, fileType) { 
     
     if (fileType.indexOf('dwg') == -1) {
       if (status) status(true, 'Not a DWG file. Only DWG files are supported, at the moment. Aborting conversion.');
@@ -38,9 +38,10 @@ var ForgePDF = {
     if (status) {
       status(false, 'Preparing ' + fileName);
     }
-    $.post("/autocad.io/submitWorkItem", { "projectId": projectId, "itemId": itemId, "session": token, "fileName": fileName })
+    $.post("/autocad.io/submitWorkItem", { "href": href, "projectId": projectId, "itemId": itemId, "session": token, "fileName": fileName })
         .done(function (data) {
-            alert("Data sent to Design Automation API: " + data);
+            console.log("Data sent to Design Automation API: " + data);
+            $('#dataManagementHubs').jstree(true).refresh();
         });
 
     if (status) {

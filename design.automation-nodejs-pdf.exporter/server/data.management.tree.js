@@ -55,6 +55,7 @@ function getFolders(hubId, projectId, tokenSession, res) {
       topFolders.body.data.forEach(function (item) {
         folderItemsForTree.push(prepareItemForTree(
           item.links.self.href,
+          item.links.self.href,
           item.attributes.displayName == null ? item.attributes.name : item.attributes.displayName,
           item.type,
           true
@@ -92,6 +93,7 @@ function getProjects(hubId, tokenSession, res) {
         }
 
         projectsForTree.push(prepareItemForTree(
+          project.links.self.href,
           project.links.self.href,
           project.attributes.name,
           projectType,
@@ -132,6 +134,7 @@ function getHubs(tokenSession, res) {
 
         hubsForTree.push(prepareItemForTree(
           hub.links.self.href,
+          hub.links.self.href,
           hub.attributes.name,
           hubType,
           true
@@ -157,6 +160,7 @@ function getFolderContents(projectId, folderId, tokenSession, res) {
         var displayName = item.attributes.displayName == null ? item.attributes.name : item.attributes.displayName;
         if (displayName !== '') { // BIM 360 Items with no displayName also don't have storage, so not file to transfer
           folderItemsForTree.push(prepareItemForTree(
+            item.links.self.href,
             item.links.self.href,
             displayName,
             item.type,
@@ -189,6 +193,7 @@ function getVersions(projectId, itemId, tokenSession, res) {
         //var ossUrl = version.relationships.storage.meta.link.href;
         //console.log('oss storage url: ' + ossUrl);
         versionsForTree.push(prepareItemForTree(
+          version.links.self.href,
           designId,
           dateFormated + ' by ' + version.attributes.lastModifiedUserName,
           'versions',
@@ -207,37 +212,11 @@ function getVersions(projectId, itemId, tokenSession, res) {
 
 
 
-function prepareItemForTree(_id, _text, _type, _children, _fileType, _fileName) {
-  return { id: _id, text: _text, type: _type, children: _children, fileType: _fileType, fileName: _fileName };
+function prepareItemForTree(_href, _id, _text, _type, _children, _fileType, _fileName) {
+  return { href: _href, id: _id, text: _text, type: _type, children: _children, fileType: _fileType, fileName: _fileName };
 }
 
 
 var moment = require('moment');
-
-// Formats a list to JSTree structure
-function prepareArrayForJSTree(listOf, canHaveChildren, data) {
-  if (listOf == null) return '';
-  var treeList = [];
-  listOf.forEach(function (item, index) {
-
-    var szDate = item.attributes.lastModifiedTime;
-    if (!canHaveChildren) {
-      var lastModifiedTime = moment(item.attributes.lastModifiedTime);
-      var days = moment().diff(lastModifiedTime, 'days')
-      szDate = (listOf.length > 1 || days > 7 ? lastModifiedTime.format('MMM D, YYYY, h:mm a') : lastModifiedTime.fromNow());
-    }
-    var treeItem = {
-      id: item.links.self.href,
-      data: (item.relationships != null && item.relationships.derivatives != null ?
-        item.relationships.derivatives.data.id : null),
-      text: (item.type === 'versions' ? szDate : item.attributes.displayName == null ? item.attributes.name : item.attributes.displayName),
-      type: item.type,
-      children: canHaveChildren
-    };
-    treeList.push(treeItem);
-  });
-  return treeList;
-}
-
 
 module.exports = router;

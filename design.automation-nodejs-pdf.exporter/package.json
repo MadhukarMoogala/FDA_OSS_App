@@ -20,9 +20,9 @@
     "request": "^2.82.0"
   },
   "scripts": {
-    "start" : "NODE_ENV=production node start.js",
+    "start": "NODE_ENV=production node start.js",
     "dev": "node start.js",
     "nodemon": "nodemon start.js --ignore www/"
   },
-   "license": "MIT"
+  "license": "MIT"
 }

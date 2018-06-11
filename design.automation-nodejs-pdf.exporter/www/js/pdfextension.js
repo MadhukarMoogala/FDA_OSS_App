@@ -36,7 +36,9 @@ PDFExtension.prototype.load = function () {
     // Button 1
     var button1 = new Autodesk.Viewing.UI.Button('toolbarPDF');
     button1.onClick = function (e) {
-        ForgePDF.exportPDF(documentId, projectId, itemId, fileName, token, statusCallback, fileType); /*Optional*/
+        var nodeId = $('#dataManagementHubs').jstree("get_selected");
+        var node = $('#dataManagementHubs').jstree(true).get_node(nodeId);
+        ForgePDF.exportPDF(node.original.href, documentId, projectId, itemId, fileName, token, statusCallback, fileType); /*Optional*/
     };
     button1.addClass('toolbarPDFButton');
     button1.setToolTip('Export to .PDF');
@@ -55,7 +57,7 @@ PDFExtension.prototype.load = function () {
 
 
 PDFExtension.prototype.unload = function () {
-  alert('PDFExtension is now unloaded!');
+  console.log('PDFExtension is now unloaded!');
   return true;
 };
 

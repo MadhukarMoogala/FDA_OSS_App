@@ -24,13 +24,11 @@ router.post('/autocad.io/submitWorkItem', jsonParser, function (req, res) {
             res.status(401).end('Please login first');
             return;
         }
-        var href = decodeURIComponent(req.header('wip-href'))
+        var href = decodeURIComponent(req.body.href);
         var params = href.split('/');
         var projectId = params[params.length - 3];
         var versionId = params[params.length - 1];
         getItem(req.body.projectId, versionId, req.body.itemId, req.body.fileName, tokenSession.getInternalOAuth(), tokenSession.getInternalCredentials(), res);
-
-        res.end;
     }
 });
 
@@ -48,7 +46,7 @@ function getItem(projectId, versionId, itemId, fileName, oauthClient, credential
                     console.log('Display Name of file...' + displayName);
                     var folderId = item.body.data.relationships.parent.data.id;
                     console.log('Display folderId of file...' + folderId);
-                    var uploadedPdfName = "kitchens.pdf";
+                    var uploadedPdfName = displayName.replace(".dwg", ".pdf");
                     getBucketUrl(projectId, folderId, uploadedPdfName, oauthClient, credentials).then(function (retBucket) {
                         var objectId = retBucket.objectId;
                         var bucketURL = retBucket.bucketURL;
@@ -67,11 +65,12 @@ function getItem(projectId, versionId, itemId, fileName, oauthClient, credential
                                     console.log("Display the workitem repory \n");
                                     report = workitemResult.StatusDetails.Report;
                                     console.log(report);
-                                    createNewItemVersion(projectId, folderId, objectName, objectId, oauthClient, credentials)
+                                    createNewItemVersion(projectId, folderId, uploadedPdfName, objectId, oauthClient, credentials)
                                         .then(function (attachmentVersionId) {
                                             attachVersionToAnotherVersion(projectId, versionId, attachmentVersionId, oauthClient, credentials)
                                                 .then(function () {
-                                                    res.status(200).json({ fileName: objectName, objectId: objectId });
+                                                    res.json({ fileName: uploadedPdfName, objectId: objectId });
+                                                    return;
                                                 })
                                                 .catch(function (error) {
                                                     console.log('attachVersionToAnotherVersion: failed');
@@ -94,7 +93,7 @@ function getItem(projectId, versionId, itemId, fileName, oauthClient, credential
                                     console.log(report);
                                 }
                                 console.log(report);
-                                res.end(report);
+                                //res.end(report);
                             });
                         }, function (err) {
                             console.error(err);
@@ -102,8 +101,8 @@ function getItem(projectId, versionId, itemId, fileName, oauthClient, credential
                     }, function (err) {
                         console.error(err);
                     });
-                    res.json({ success: true, message: ossUrl });
-                    break;
+                    //res.json({ success: true, message: ossUrl });
+                    //break;
                 }
             } else {
                 res.json({ success: false, message: 'No storage href returned.' });
@@ -179,6 +178,29 @@ function attachVersionToAnotherVersion(projectId, versionId, attachmentVersionId
             });
     });
 }
+
+function attachmentSpecData(versionId, projectId) {
+    var extensionType = projectId.startsWith("a.") ? "auxiliary:autodesk.core:Attachment" : "derived:autodesk.bim360:FileToDocument";
+
+    var attachmentSpec = {
+        "jsonapi": {
+            "version": "1.0"
+        },
+        "data": {
+            "type": "versions",
+            "id": versionId,
+            "meta": {
+                "extension": {
+                    "type": extensionType,
+                    "version": "1.0"
+                }
+            }
+        }
+    }
+
+    return attachmentSpec;
+}
+
 function itemSpecData(fileName, projectId, folderId, objectId) {
     var itemsType = projectId.startsWith("a.") ? "items:autodesk.core:File" : "items:autodesk.bim360:File";
     var versionsType = projectId.startsWith("a.") ? "versions:autodesk.core:File" : "versions:autodesk.bim360:File";
@@ -317,7 +339,7 @@ function createNewItemVersion(projectId, folderId, fileName, objectId, oauthClie
                     // We did not find it so we should create it
                     var items = new forgeSDK.ItemsApi();
                     var body = itemSpecData(fileName, projectId, folderId, objectId);
-                    items.postItem(projectId, body, tokenSession.getInternalOAuth(), tokenSession.getInternalCredentials())
+                    items.postItem(projectId, body, oauthClient, credentials)
                         .then(function (itemData) {
                             // Get the versionId out of the reply
                             _resolve(itemData.body.included[0].id);
